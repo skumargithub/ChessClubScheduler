@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html ng-app="MatchesApp">
+<head>
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 15px;
+}
+
+button {  
+    margin-left: 121px;
+    margin-top: 1px;
+    width: 134px;
+    height: 45px; 
+    font-size:14px;
+    font-weight:700;
+}
+
+.green{
+  color:green;
+}
+.gray{
+  color:gray;
+}
+</style>
+<title>Chess Club, MATCHES</title>
+<script type="text/javascript" src="lib/angular.min.js"></script>
+<script type="text/javascript" src="lib/FileSaver.min.js"></script>
+
+</head>
+<body>
+<div ng-controller="MatchesCtrl">
+  <h2 align="center">Matches</h2>
+  <button type="button" ng-click="loadMatches()">Restore</button>
+  <button type="button" ng-click="exportMatches()">Export Matches</button>
+  <button type="button" ng-click="exportStudents()">Export Students</button>
+
+  <table cellspacing="2" cellpadding="0" border="0" width="800">
+  <tr>
+    <td>
+       <table cellspacing="2" cellpadding="2" border="2" width="800" >
+         <tr>
+            <th>Match</th>
+            <th>Who Won?</th>
+         </tr>
+       </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+       <div style="width:825px; height:500px; overflow:auto;">
+         <table cellspacing="0" cellpadding="1" border="1" width="800" >
+          <tr ng-repeat="match in matches">
+            <td>
+              {{match.student1.firstName}}
+	      {{match.student1.lastName}}
+	      (Rank: {{match.student1.rank}})<br/>
+	      -VS-<br/>
+              {{match.student2.firstName}}
+              {{match.student2.lastName}}
+	      (Rank: {{match.student2.rank}})
+            </td>
+            <td>
+              <input ng-click="wonClicked(match, 1)" type="checkbox" ng-model="match.student1.won"><br/>
+	      <br/>
+              <input ng-click="wonClicked(match, 2)" type="checkbox" ng-model="match.student2.won">
+            </td>
+          </tr>
+         </table>  
+       </div>
+    </td>
+  </tr>
+  </table>
+ 
+<script>
+  var app = angular.module('MatchesApp', []);
+  app.controller('MatchesCtrl', function($scope) {
+ 
+    $scope.generateMatches = function() {
+      function isOneOpenInRange(students, min, max, current) {
+        for(k = min; k <= max; ++k) {
+          if(k != current && !students[k].matched) return true;
+        }
+
+        return false;
+      }
+
+      var allStudents = JSON.parse(localStorage.getItem("students"))
+      var students = allStudents.filter( function(s) { return s.signedIn; });
+      students = students.sort(function(a, b) { return a.rank - b.rank; });
+      console.log("in generateMatches, # of students to be matched: " + students.length);
+      $scope.allStudents = allStudents;
+      $scope.matches = [];
+
+      // No one is matched yet
+      for(i = 0; i < students.length; ++i) {
+        students[i].matched = false;
+        students[i].won = false;
+      }
+
+      var matchBoundary = 4;
+
+      for(i = students.length - 1; i >= 0; --i) {
+        if(students[i].matched) {
+          console.log("Student at index " + i + " is already matched, ignoring");
+          continue;
+        }
+
+	var min = i - matchBoundary;
+	var max = i + matchBoundary;
+	if(min < 0) min = 0;
+	if(max > students.length - 1) max = students.length - 1;
+
+        console.log("Finding match for " + i + " ,starting with min: " + min + ", max: " + max);
+
+        var possibleToMatch = true;
+        while(!isOneOpenInRange(students, min, max, i)) {
+          if(min == 0 && max == students.length - 1) {
+            possibleToMatch = false;
+            break;
+          }
+          min = min - 1;
+          max = max + 1;
+
+	  if(min < 0) min = 0;
+	  if(max > students.length - 1) max = students.length - 1;
+          console.log("Adjusting to min: " + min + ", max: " + max);
+        }
+
+        if(!possibleToMatch) {
+          console.log("NOT possible to match " + i);
+          continue;
+        }
+
+        do {
+          var randomIndex = Math.floor(Math.random() * (max - min + 1)) + min;
+          console.log("Will try match " + i + " with " + randomIndex);
+        } while(i == randomIndex || students[randomIndex].matched);
+        console.log("Will match " + i + " with " + randomIndex);
+        students[i].matched = true;
+        students[randomIndex].matched = true;
+
+        match = {};
+        match.student1 = students[i];
+        match.student2 = students[randomIndex];
+        $scope.matches.push(match);
+      }
+
+      console.log("matches: " + JSON.stringify($scope.matches));
+    };
+
+     $scope.loadMatches = function() {
+      console.log("in loadMatches");
+      $scope.matches = JSON.parse(localStorage.getItem("matches"));
+    };
+
+    $scope.exportMatches = function() {
+      console.log("in exportMatches");
+
+      var blob = new Blob([JSON.stringify($scope.matches, null, 2)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "matches-" + new Date().toJSON().slice(0,10) + ".txt");
+    };
+
+    $scope.exportStudents = function() {
+      console.log("in exportStudents");
+
+      var blob = new Blob([JSON.stringify($scope.allStudents, null, 2)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "students-" + new Date().toJSON().slice(0,10) + ".txt");
+    };
+
+    $scope.wonClicked = function(match, studentNumber) {
+
+      if(studentNumber == 1) match.student2.won = false;
+      if(studentNumber == 2) match.student1.won = false;
+
+      var student1 = null;
+      var student2 = null;
+      for(i = 0; i < $scope.allStudents.length; ++i) {
+        var s = $scope.allStudents[i];
+        if(s.firstName === match.student1.firstName && s.lastName === match.student1.lastName)
+          student1 = s;
+
+        if(s.firstName === match.student2.firstName && s.lastName === match.student2.lastName)
+          student2 = s;
+      }
+
+      // Swap the ranks
+      var tmpRank = student1.rank;
+      student1.rank = student2.rank;
+      student2.rank = tmpRank;
+      console.log("Rank of " + student1.firstName + " " + student1.lastName + " is now " + student1.rank);
+      console.log("Rank of " + student2.firstName + " " + student2.lastName + " is now " + student2.rank);
+      
+      localStorage.setItem("matches", JSON.stringify($scope.matches));
+    };
+
+    $scope.generateMatches();
+  });
+</script>
+</body>
+</html>
+

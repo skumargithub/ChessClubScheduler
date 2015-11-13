@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html ng-app="SignUpApp">
+<head>
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 15px;
+}
+
+button {  
+    margin-left: 121px;
+    margin-top: 1px;
+    width: 84px;
+    height: 45px; 
+    font-size:14px;
+    font-weight:700;
+}
+
+.green{
+  color:green;
+}
+.gray{
+  color:gray;
+}
+</style>
+<title>Chess Club, SIGNIN</title>
+<script type="text/javascript" src="lib/angular.min.js"></script>
+
+</head>
+<body>
+<div ng-controller="SigninCtrl">
+  <h2 align="center">Students Signin</h2>
+  <button type="button" ng-click="loadStudents()">Restore</button>
+  <button type="button" ng-disabled="true">Start</button>
+  <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
+  <button type="button" ng-click="generateMatchUp()">MatchUp</button>
+
+  <table cellspacing="2" cellpadding="0" border="0" width="800">
+  <tr>
+    <td>
+       <table cellspacing="2" cellpadding="2" border="2" width="800" >
+         <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Rank</th>
+            <th>Signin</th>
+         </tr>
+       </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+       <div style="width:825px; height:500px; overflow:auto;">
+         <table cellspacing="0" cellpadding="1" border="1" width="800" >
+          <tr ng-repeat="student in students">
+            <td>{{student.firstName}}</td>
+            <td>{{student.lastName}}</td>
+            <td>{{student.rank}}</td>
+	    <td><input type="checkbox" ng-model="student.signedIn" ng-change="signinChanged()"></td>
+          </tr>
+         </table>  
+       </div>
+    </td>
+  </tr>
+  </table>
+ 
+<script>
+  var app = angular.module('SignUpApp', []);
+  app.controller('SigninCtrl', function($scope) {
+ 
+    $scope.students = [];
+    $scope.signInStarted = false;
+    $scope.signInStartButtonColor = "green";
+
+    $scope.loadStudents = function() {
+      console.log("in loadStudents");
+      $scope.students = JSON.parse(localStorage.getItem("students"));
+    };
+
+    $scope.signinChanged = function() {
+      console.log("in signinChanged");
+      localStorage.setItem("students", JSON.stringify($scope.students));
+    }
+
+    $scope.generateMatchUp = function() {
+      console.log("in generateMatchUp");
+      window.location = "matches.html";
+    }
+
+    $scope.fileSelected = function(fileInput) {
+      var fileName = fileInput.files[0].name;
+      var reader = new FileReader();
+      reader.onload = (function(theFile) {
+        //console.log("theFile: " + theFile);
+        //console.log("contents: " + reader.result);
+        $scope.students = JSON.parse(reader.result);
+        for(i = 0; i < $scope.students.length; ++i) {
+          $scope.students[i].signedIn = false;
+        }
+
+        $scope.$apply();
+      });
+
+      reader.readAsText(fileInput.files[0]);
+    }
+  });
+</script>
+</body>
+</html>
+
