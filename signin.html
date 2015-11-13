@@ -10,8 +10,8 @@ th, td {
     padding: 15px;
 }
 
-button {  
-    margin-left: 121px;
+button {
+    margin-left: 10px;
     margin-top: 1px;
     width: 84px;
     height: 45px; 
@@ -30,13 +30,13 @@ button {
 <script type="text/javascript" src="lib/angular.min.js"></script>
 
 </head>
-<body>
+<body style="width: 850px">
 <div ng-controller="SigninCtrl">
   <h2 align="center">Students Signin</h2>
-  <button type="button" ng-click="loadStudents()">Restore</button>
-  <button type="button" ng-disabled="true">Start</button>
+  <button style="float: left;" type="left-button" ng-click="loadStudents()">Restore</button>
+  <button style="margin-left: 150px" type="button" ng-disabled="true">Start</button>
   <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
-  <button type="button" ng-click="generateMatchUp()">MatchUp</button>
+  <button style="float: right;" type="button" ng-click="generateMatchUp()">MatchUp</button>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
