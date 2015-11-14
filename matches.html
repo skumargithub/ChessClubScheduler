@@ -172,9 +172,14 @@ button {
     };
 
     $scope.wonClicked = function(match, studentNumber) {
-
-      if(studentNumber == 1) match.student2.won = false;
-      if(studentNumber == 2) match.student1.won = false;
+      var swapRank = false;
+      if(studentNumber == 1) {
+        match.student2.won = false;
+	if(match.student1.rank < match.student2.rank) swapRank = true;
+      } else if (studentNumber == 2) {
+	match.student1.won = false;
+	if(match.student2.rank < match.student1.rank) swapRank = true;
+      }
 
       var student1 = null;
       var student2 = null;
@@ -187,10 +192,16 @@ button {
           student2 = s;
       }
 
-      // Swap the ranks
-      var tmpRank = student1.rank;
-      student1.rank = student2.rank;
-      student2.rank = tmpRank;
+      if(swapRank) {
+        var tmpRank = student1.rank;
+        student1.rank = student2.rank;
+        student2.rank = tmpRank;
+
+        var tmpRank = match.student1.rank;
+        match.student1.rank = match.student2.rank;
+        match.student2.rank = tmpRank;
+      }
+
       console.log("Rank of " + student1.firstName + " " + student1.lastName + " is now " + student1.rank);
       console.log("Rank of " + student2.firstName + " " + student2.lastName + " is now " + student2.rank);
       
