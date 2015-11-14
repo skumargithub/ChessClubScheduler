@@ -167,7 +167,9 @@ button {
     $scope.exportStudents = function() {
       console.log("in exportStudents");
 
-      var blob = new Blob([JSON.stringify($scope.allStudents, null, 2)], {type: "text/plain;charset=utf-8"});
+      // Save by rank order
+      var students = $scope.allStudents.sort(function(a, b) { return a.rank - b.rank; });
+      var blob = new Blob([JSON.stringify(students, null, 2)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "students-" + new Date().toJSON().slice(0,10) + ".txt");
     };
 
