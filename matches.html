@@ -144,8 +144,16 @@ button {
         students[randomIndex].matched = true;
 
         match = {};
-        match.student1 = students[i];
-        match.student2 = students[randomIndex];
+	match.student1 = {};students[i];
+	match.student1.firstName = students[i].firstName;
+	match.student1.lastName = students[i].lastName;
+	match.student1.rank = students[i].rank;
+
+	match.student2 = {};
+	match.student2.firstName = students[randomIndex].firstName;
+	match.student2.lastName = students[randomIndex].lastName;
+	match.student2.rank = students[randomIndex].rank;
+
         $scope.matches.push(match);
       }
 
@@ -177,10 +185,10 @@ button {
       var swapRank = false;
       if(studentNumber == 1) {
         match.student2.won = false;
-	if(match.student1.rank < match.student2.rank) swapRank = true;
+        if(match.student1.rank > match.student2.rank) swapRank = true;
       } else if (studentNumber == 2) {
-	match.student1.won = false;
-	if(match.student2.rank < match.student1.rank) swapRank = true;
+        match.student1.won = false;
+        if(match.student2.rank > match.student1.rank) swapRank = true;
       }
 
       var student1 = null;
@@ -199,7 +207,7 @@ button {
         student1.rank = student2.rank;
         student2.rank = tmpRank;
 
-        var tmpRank = match.student1.rank;
+        tmpRank = match.student1.rank;
         match.student1.rank = match.student2.rank;
         match.student2.rank = tmpRank;
       }
