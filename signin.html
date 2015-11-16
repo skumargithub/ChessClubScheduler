@@ -36,7 +36,7 @@ button {
   <button style="float: left;" type="left-button" ng-click="loadStudents()">Restore</button>
   <button style="margin-left: 150px" type="button" ng-disabled="true">Start</button>
   <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
-  <button style="float: right;" type="button" ng-click="generateMatchUp()">MatchUp</button>
+  <button style="float: right;" type="button" ng-disabled="notPossibleToMatchup()" ng-click="generateMatchUp()">MatchUp</button>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
@@ -88,6 +88,12 @@ button {
     $scope.generateMatchUp = function() {
       console.log("in generateMatchUp");
       window.location = "matches.html";
+    }
+
+    $scope.notPossibleToMatchup = function() {
+      console.log("In notPossibleToMatchup");
+      var signedInStudents = $scope.students.filter( function(s) { return s.signedIn; });
+      return signedInStudents.length < 2;
     }
 
     $scope.fileSelected = function(fileInput) {
