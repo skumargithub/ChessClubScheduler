@@ -180,15 +180,10 @@ button {
     $scope.exportStudents = function() {
       console.log("in exportStudents");
 
-      // Give the students the new rank
-      for(var i = 0; i < $scope.allStudents.length; ++i) {
-        $scope.allStudents[i].rank = $scope.allStudents[i].newRank;
-      }
-
-      // Save by rank order
-      var students = $scope.allStudents.sort(function(a, b) { return a.rank - b.rank; });
+      // assign new ranks starting with 1
+      var students = $scope.allStudents.sort(function(a, b) { return a.newRank - b.newRank; });
       for(var i = 0; i < students.length; ++i) {
-        students[i].rank = i;
+        students[i].rank = i + 1;
       }
 
       // And save
