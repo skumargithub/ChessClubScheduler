@@ -91,7 +91,7 @@ button {
       }
 
       $scope.allStudents = JSON.parse(localStorage.getItem("students"))
-      var students = $scope.allStudents.filter(function(s) { return s.signedIn; }).
+      var signedInStudentsByRank = $scope.allStudents.filter(function(s) { return s.signedIn; }).
                                         sort(function(a, b) { return a.rank - b.rank; });
       console.log("in generateMatches, # of students to be matched: " + students.length);
 
@@ -105,8 +105,8 @@ button {
       var matchBoundary = 4;
 
       $scope.matches = [];
-      for(var i = students.length - 1; i >= 0; --i) {
-        if(students[i].matched) {
+      for(var i = signedInStudentsByRank.length - 1; i >= 0; --i) {
+        if(signedInStudentsByRank[i].matched) {
           console.log("Student at index " + i + " is already matched, ignoring");
           continue;
         }
@@ -114,13 +114,13 @@ button {
 	      var min = i - matchBoundary;
 	      var max = i + matchBoundary;
 	      if(min < 0) min = 0;
-	      if(max > students.length - 1) max = students.length - 1;
+	      if(max > signedInStudentsByRank.length - 1) max = signedInStudentsByRank.length - 1;
 
         console.log("Finding match for " + i + " ,starting with min: " + min + ", max: " + max);
 
         var possibleToMatch = true;
-        while(!isOneOpenInRange(students, min, max, i)) {
-          if(min == 0 && max == students.length - 1) {
+        while(!isOneOpenInRange(signedInStudentsByRank, min, max, i)) {
+          if(min == 0 && max == signedInStudentsByRank.length - 1) {
             possibleToMatch = false;
             break;
           }
@@ -128,7 +128,7 @@ button {
           max = max + 1;
 
 	        if(min < 0) min = 0;
-	        if(max > students.length - 1) max = students.length - 1;
+	        if(max > signedInStudentsByRank.length - 1) max = signedInStudentsByRank.length - 1;
 
           console.log("Adjusting to min: " + min + ", max: " + max);
         }
@@ -141,21 +141,21 @@ button {
         do {
           var randomIndex = Math.floor(Math.random() * (max - min + 1)) + min;
           console.log("Will try match " + i + " with " + randomIndex);
-        } while(i == randomIndex || students[randomIndex].matched);
+        } while(i == randomIndex || signedInStudentsByRank[randomIndex].matched);
         console.log("Will match " + i + " with " + randomIndex);
-        students[i].matched = true;
-        students[randomIndex].matched = true;
+        signedInStudentsByRank[i].matched = true;
+        signedInStudentsByRank[randomIndex].matched = true;
 
         match = {};
 	      match.student1 = {};
-	      match.student1.firstName = students[i].firstName;
-	      match.student1.lastName = students[i].lastName;
-	      match.student1.rank = students[i].rank;
+	      match.student1.firstName = signedInStudentsByRank[i].firstName;
+	      match.student1.lastName = signedInStudentsByRank[i].lastName;
+	      match.student1.rank = signedInStudentsByRank[i].rank;
 
 	      match.student2 = {};
-	      match.student2.firstName = students[randomIndex].firstName;
-	      match.student2.lastName = students[randomIndex].lastName;
-	      match.student2.rank = students[randomIndex].rank;
+	      match.student2.firstName = signedInStudentsByRank[randomIndex].firstName;
+	      match.student2.lastName = signedInStudentsByRank[randomIndex].lastName;
+	      match.student2.rank = signedInStudentsByRank[randomIndex].rank;
 
         $scope.matches.push(match);
       }
