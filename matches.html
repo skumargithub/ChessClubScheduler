@@ -96,9 +96,9 @@ button {
       console.log("in generateMatches, # of students to be matched: " + students.length);
 
       // No one is matched yet
-      for(var i = 0; i < students.length; ++i) {
-        students[i].matched = false;
-        students[i].newRank = students[i].rank;
+      for(var i = 0; i < $scope.allStudents.length; ++i) {
+        $scope.allStudents[i].matched = false;
+        $scope.allStudents[i].newRank = $scope.allStudents[i].rank;
       }
 
       // Start to create the matches
@@ -147,7 +147,7 @@ button {
         students[randomIndex].matched = true;
 
         match = {};
-	      match.student1 = {};students[i];
+	      match.student1 = {};
 	      match.student1.firstName = students[i].firstName;
 	      match.student1.lastName = students[i].lastName;
 	      match.student1.rank = students[i].rank;
@@ -179,6 +179,17 @@ button {
 
     $scope.exportStudents = function() {
       console.log("in exportStudents");
+
+      // Keep track of the number of consequetive no showups
+      for(var i = 0; i < $scope.allStudents.length; ++i) {
+        var student = $scope.allStudents[i];
+        if(student.signedIn) student.missedSignins = 0;
+        else {
+          student.missedSignins++;
+          // If a student has missed 2 consequetive signing, drop the rank by 3 places (1 to 4 and so on...)
+          if(student.missedSignins >= 2) student.newRank = student.rank + 3.5;
+        }
+      }
 
       // assign new ranks starting with 1
       var students = $scope.allStudents.sort(function(a, b) { return a.newRank - b.newRank; });
