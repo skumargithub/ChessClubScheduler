@@ -35,8 +35,8 @@ button {
 <div ng-controller="MatchesCtrl">
   <h2 align="center">Matches</h2>
   <button type="button" ng-click="loadMatches()">Restore</button>
-  <button type="button" ng-click="exportMatches()">Export Matches</button>
-  <button type="button" ng-click="exportStudents()">Export Students</button>
+  <button type="button" ng-disabled="resultsToBeRecorded != 0" ng-click="exportMatches()">Export Matches</button>
+  <button type="button" ng-disabled="resultsToBeRecorded != 0" ng-click="exportStudents()">Export Students</button>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
@@ -64,9 +64,9 @@ button {
 	      (Rank: {{match.student2.rank}})
             </td>
             <td>
-              <input ng-click="wonClicked(match, 1)" type="checkbox" ng-model="match.student1.won"><br/>
-	      <br/>
-              <input ng-click="wonClicked(match, 2)" type="checkbox" ng-model="match.student2.won">
+              <input ng-disabled="match.completed" value="student1" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio"><br/>
+	      <input ng-disabled="match.completed" value="draw" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">Draw<br/>
+              <input ng-disabled="match.completed" value="student2" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">
             </td>
           </tr>
          </table>  
@@ -79,6 +79,8 @@ button {
   var app = angular.module('MatchesApp', []);
   app.controller('MatchesCtrl', function($scope) {
  
+    $scope.resultsToBeRecorded = -1;
+
     $scope.generateMatches = function() {
       function isOneOpenInRange(students, min, max, current) {
         for(k = min; k <= max; ++k) {
@@ -88,31 +90,31 @@ button {
         return false;
       }
 
-      var allStudents = JSON.parse(localStorage.getItem("students"))
-      var students = allStudents.filter( function(s) { return s.signedIn; });
-      students = students.sort(function(a, b) { return a.rank - b.rank; });
+      $scope.allStudents = JSON.parse(localStorage.getItem("students"))
+      var students = $scope.allStudents.filter(function(s) { return s.signedIn; }).
+                                        sort(function(a, b) { return a.rank - b.rank; });
       console.log("in generateMatches, # of students to be matched: " + students.length);
-      $scope.allStudents = allStudents;
-      $scope.matches = [];
 
       // No one is matched yet
-      for(i = 0; i < students.length; ++i) {
+      for(var i = 0; i < students.length; ++i) {
         students[i].matched = false;
-        students[i].won = false;
+        students[i].newRank = students[i].rank;
       }
 
+      // Start to create the matches
       var matchBoundary = 4;
 
-      for(i = students.length - 1; i >= 0; --i) {
+      $scope.matches = [];
+      for(var i = students.length - 1; i >= 0; --i) {
         if(students[i].matched) {
           console.log("Student at index " + i + " is already matched, ignoring");
           continue;
         }
 
-	var min = i - matchBoundary;
-	var max = i + matchBoundary;
-	if(min < 0) min = 0;
-	if(max > students.length - 1) max = students.length - 1;
+	      var min = i - matchBoundary;
+	      var max = i + matchBoundary;
+	      if(min < 0) min = 0;
+	      if(max > students.length - 1) max = students.length - 1;
 
         console.log("Finding match for " + i + " ,starting with min: " + min + ", max: " + max);
 
@@ -125,8 +127,9 @@ button {
           min = min - 1;
           max = max + 1;
 
-	  if(min < 0) min = 0;
-	  if(max > students.length - 1) max = students.length - 1;
+	        if(min < 0) min = 0;
+	        if(max > students.length - 1) max = students.length - 1;
+
           console.log("Adjusting to min: " + min + ", max: " + max);
         }
 
@@ -144,18 +147,20 @@ button {
         students[randomIndex].matched = true;
 
         match = {};
-	match.student1 = {};students[i];
-	match.student1.firstName = students[i].firstName;
-	match.student1.lastName = students[i].lastName;
-	match.student1.rank = students[i].rank;
+	      match.student1 = {};students[i];
+	      match.student1.firstName = students[i].firstName;
+	      match.student1.lastName = students[i].lastName;
+	      match.student1.rank = students[i].rank;
 
-	match.student2 = {};
-	match.student2.firstName = students[randomIndex].firstName;
-	match.student2.lastName = students[randomIndex].lastName;
-	match.student2.rank = students[randomIndex].rank;
+	      match.student2 = {};
+	      match.student2.firstName = students[randomIndex].firstName;
+	      match.student2.lastName = students[randomIndex].lastName;
+	      match.student2.rank = students[randomIndex].rank;
 
         $scope.matches.push(match);
       }
+
+      $scope.resultsToBeRecorded = $scope.matches.length;
 
       console.log("matches: " + JSON.stringify($scope.matches));
     };
@@ -175,45 +180,81 @@ button {
     $scope.exportStudents = function() {
       console.log("in exportStudents");
 
+      // Give the students the new rank
+      for(var i = 0; i < $scope.allStudents.length; ++i) {
+        $scope.allStudents[i].rank = $scope.allStudents[i].newRank;
+      }
+
       // Save by rank order
       var students = $scope.allStudents.sort(function(a, b) { return a.rank - b.rank; });
+      for(var i = 0; i < students.length; ++i) {
+        students[i].rank = i;
+      }
+
+      // And save
       var blob = new Blob([JSON.stringify(students, null, 2)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "students-" + new Date().toJSON().slice(0,10) + ".txt");
     };
 
-    $scope.wonClicked = function(match, studentNumber) {
-      var swapRank = false;
-      if(studentNumber == 1) {
-        match.student2.won = false;
-        if(match.student1.rank > match.student2.rank) swapRank = true;
-      } else if (studentNumber == 2) {
-        match.student1.won = false;
-        if(match.student2.rank > match.student1.rank) swapRank = true;
+    $scope.resultClicked = function(match) {
+      console.log("in resultClicked");
+
+      $scope.resultsToBeRecorded--;
+
+      function findStudent(firstName, lastName) {
+        for(var i = 0; i < $scope.allStudents.length; ++i) {
+          var s = $scope.allStudents[i];
+          if(s.firstName === firstName && s.lastName === lastName)
+            return s;
+        }
       }
 
-      var student1 = null;
-      var student2 = null;
-      for(i = 0; i < $scope.allStudents.length; ++i) {
-        var s = $scope.allStudents[i];
-        if(s.firstName === match.student1.firstName && s.lastName === match.student1.lastName)
-          student1 = s;
+      var student1 = findStudent(match.student1.firstName, match.student1.lastName);
+      var student2 = findStudent(match.student2.firstName, match.student2.lastName);
 
-        if(s.firstName === match.student2.firstName && s.lastName === match.student2.lastName)
-          student2 = s;
+      var student1MatchInfo = {};
+      student1MatchInfo.firstName = student2.firstName;
+      student1MatchInfo.lastName = student2.lastName;
+
+      var student2MatchInfo = {};
+      student2MatchInfo.firstName = student1.firstName;
+      student2MatchInfo.lastName = student1.lastName;
+
+      if(match.result == "draw") {                     // Draw
+        student1MatchInfo.result = "draw";
+        student2MatchInfo.result = "draw";
+
+        if(student1.rank > student2.rank) {
+          student1.newRank = match.student1.newRank = match.student2.rank + 0.1;
+        } else {
+          student2.newRank = match.student2.newRank = match.student1.rank + 0.1;
+        }
+      } else if(match.result == "student1") {          // Student 1 has won
+        student1MatchInfo.result = "won";
+        student2MatchInfo.result = "lost";
+
+        if(match.student1.rank > match.student2.rank) {
+          student1.newRank = match.student1.newRank = match.student2.rank - 0.1;
+        }
+      } else if (match.result == "student2") {        // Student 2 has won
+        student1MatchInfo.result = "lost";
+        student2MatchInfo.result = "won";
+
+        if(match.student2.rank > match.student1.rank) {
+          student2.newRank = match.student2.newRank = match.student1.rank - 0.1;
+        }
       }
 
-      if(swapRank) {
-        var tmpRank = student1.rank;
-        student1.rank = student2.rank;
-        student2.rank = tmpRank;
+      console.log("Rank of " + student1.firstName + " " + student1.lastName + " is now " + student1.newRank);
+      console.log("Rank of " + student2.firstName + " " + student2.lastName + " is now " + student2.newRank);
 
-        tmpRank = match.student1.rank;
-        match.student1.rank = match.student2.rank;
-        match.student2.rank = tmpRank;
-      }
+      match.completed = true;
 
-      console.log("Rank of " + student1.firstName + " " + student1.lastName + " is now " + student1.rank);
-      console.log("Rank of " + student2.firstName + " " + student2.lastName + " is now " + student2.rank);
+      if(student1.matches.length >= 3) students1.matches = students1.matches.splice(0, 1);
+      if(student2.matches.length >= 3) students2.matches = students2.matches.splice(0, 1);
+
+      student1.matches.push(student1MatchInfo);
+      student2.matches.push(student2MatchInfo);
       
       localStorage.setItem("matches", JSON.stringify($scope.matches));
     };
