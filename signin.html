@@ -104,18 +104,18 @@ button {
         //console.log("contents: " + reader.result);
         var students = JSON.parse(reader.result);
 
-	// Sort by last name and first name (in that order)
-	$scope.students = students.sort(function(a, b) {
+	      // Sort by last name and first name (in that order)
+	      $scope.students = students.sort(function(a, b) {
           if(a.lastName > b.lastName) return 1;
-	  else if(a.lastName < b.lastName) return -1;
-	  else {
+	        else if(a.lastName < b.lastName) return -1;
+	        else {
             if(a.firstName > b.firstName) return 1;
-	    else if(a.firstName < b.firstName) return -1;
-	    else return 0;
+	          else if(a.firstName < b.firstName) return -1;
+	          else return 0;
           }
         });
 
-	// Mark all of them as not signed in
+        // Mark all of them as not signed in
         for(i = 0; i < $scope.students.length; ++i) {
           $scope.students[i].signedIn = false;
         }
