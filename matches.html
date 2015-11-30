@@ -79,21 +79,33 @@ button {
   var app = angular.module('MatchesApp', []);
   app.controller('MatchesCtrl', function($scope) {
  
+    // student indexes available in the range
+    var findAvailableInRange = function(students, student, min, max, findPreviouslyMatchedAsWell) {
+      var result = [];
+      for(var i = min; i <= max; ++i) {
+        if(!students[i].matched) {
+          if(findPreviouslyMatchedAsWell) {
+            result.push(i);
+          } else {
+            var previousMatch = student.matches.filter(function(match) {
+              return match.firstName == students[i].firstName && match.lastName == students[i].lastName
+            });
+
+            if(previousMatch.length == 0) result.push(i);
+          }
+        }
+      }
+
+      return result;
+    };
+
     $scope.resultsToBeRecorded = -1;
 
     $scope.generateMatches = function() {
-      function isOneOpenInRange(students, min, max, current) {
-        for(k = min; k <= max; ++k) {
-          if(k != current && !students[k].matched) return true;
-        }
-
-        return false;
-      }
-
       $scope.allStudents = JSON.parse(localStorage.getItem("students"))
       var signedInStudentsByRank = $scope.allStudents.filter(function(s) { return s.signedIn; }).
                                         sort(function(a, b) { return a.rank - b.rank; });
-      console.log("in generateMatches, # of students to be matched: " + students.length);
+      console.log("in generateMatches, # of students to be matched: " + signedInStudentsByRank.length);
 
       // No one is matched yet
       for(var i = 0; i < $scope.allStudents.length; ++i) {
@@ -105,59 +117,67 @@ button {
       var matchBoundary = 4;
 
       $scope.matches = [];
-      for(var i = signedInStudentsByRank.length - 1; i >= 0; --i) {
+      // Start with the lowest ranked player, don't find a match for the highest ranked player  (i > 0)
+      for(var i = signedInStudentsByRank.length - 1; i > 0; --i) {
         if(signedInStudentsByRank[i].matched) {
           console.log("Student at index " + i + " is already matched, ignoring");
           continue;
         }
 
 	      var min = i - matchBoundary;
-	      var max = i + matchBoundary;
+	      var max = i - 1;
 	      if(min < 0) min = 0;
-	      if(max > signedInStudentsByRank.length - 1) max = signedInStudentsByRank.length - 1;
+	      if(max < 0) max = 0;
 
-        console.log("Finding match for " + i + " ,starting with min: " + min + ", max: " + max);
+        console.log("Finding match (no previous match) for " + i + " ,starting with min: " + min + ", max: " + max);
 
-        var possibleToMatch = true;
-        while(!isOneOpenInRange(signedInStudentsByRank, min, max, i)) {
-          if(min == 0 && max == signedInStudentsByRank.length - 1) {
-            possibleToMatch = false;
-            break;
-          }
+        // Start with available students who have NOT played yet with student i
+        var avaiableStudentIndexes = findAvailableInRange(signedInStudentsByRank, signedInStudentsByRank[i], min, max, false);
+        while(avaiableStudentIndexes.length == 0) {
+          if(min == 0) break;
+
           min = min - 1;
-          max = max + 1;
-
-	        if(min < 0) min = 0;
-	        if(max > signedInStudentsByRank.length - 1) max = signedInStudentsByRank.length - 1;
-
-          console.log("Adjusting to min: " + min + ", max: " + max);
+          console.log("Finding match (no previous match) for " + i + " ,starting with min: " + min + ", max: " + max);
+          avaiableStudentIndexes = findAvailableInRange(signedInStudentsByRank, signedInStudentsByRank[i], min, max, false);
         }
 
-        if(!possibleToMatch) {
-          console.log("NOT possible to match " + i);
-          continue;
+        if(avaiableStudentIndexes.length == 0) {
+          min = i - matchBoundary;
+          if(min < 0) min = 0;
+          console.log("Finding match (incl previous match) for " + i + " ,starting with min: " + min + ", max: " + max);
+
+          avaiableStudentIndexes = findAvailableInRange(signedInStudentsByRank, signedInStudentsByRank[i], min, max, true);
+          while(avaiableStudentIndexes.length == 0) {
+            if(min == 0) break;
+
+            min = min - 1;
+            console.log("Finding match (incl previous match) for " + i + " ,starting with min: " + min + ", max: " + max);
+            avaiableStudentIndexes = findAvailableInRange(signedInStudentsByRank, signedInStudentsByRank[i], min, max, true);
+          }
         }
 
-        do {
-          var randomIndex = Math.floor(Math.random() * (max - min + 1)) + min;
-          console.log("Will try match " + i + " with " + randomIndex);
-        } while(i == randomIndex || signedInStudentsByRank[randomIndex].matched);
-        console.log("Will match " + i + " with " + randomIndex);
-        signedInStudentsByRank[i].matched = true;
-        signedInStudentsByRank[randomIndex].matched = true;
+        if(avaiableStudentIndexes.length != 0) {
+          console.log("Will match " + i + " with one of " + avaiableStudentIndexes);
+          var otherStudentIndex = avaiableStudentIndexes[Math.floor(Math.random() * avaiableStudentIndexes.length)];
+          console.log("Will match " + i + " with " + otherStudentIndex);
+          signedInStudentsByRank[i].matched = true;
+          signedInStudentsByRank[otherStudentIndex].matched = true;
 
-        match = {};
-	      match.student1 = {};
-	      match.student1.firstName = signedInStudentsByRank[i].firstName;
-	      match.student1.lastName = signedInStudentsByRank[i].lastName;
-	      match.student1.rank = signedInStudentsByRank[i].rank;
+          match = {};
+          match.student1 = {};
+          match.student1.firstName = signedInStudentsByRank[i].firstName;
+          match.student1.lastName = signedInStudentsByRank[i].lastName;
+          match.student1.rank = signedInStudentsByRank[i].rank;
 
-	      match.student2 = {};
-	      match.student2.firstName = signedInStudentsByRank[randomIndex].firstName;
-	      match.student2.lastName = signedInStudentsByRank[randomIndex].lastName;
-	      match.student2.rank = signedInStudentsByRank[randomIndex].rank;
+          match.student2 = {};
+          match.student2.firstName = signedInStudentsByRank[otherStudentIndex].firstName;
+          match.student2.lastName = signedInStudentsByRank[otherStudentIndex].lastName;
+          match.student2.rank = signedInStudentsByRank[otherStudentIndex].rank;
 
-        $scope.matches.push(match);
+          $scope.matches.push(match);
+        } else {
+          console.log("Student " + i + " count not be matched!");
+        }
       }
 
       $scope.resultsToBeRecorded = $scope.matches.length;
@@ -165,7 +185,7 @@ button {
       console.log("matches: " + JSON.stringify($scope.matches));
     };
 
-     $scope.loadMatches = function() {
+    $scope.loadMatches = function() {
       console.log("in loadMatches");
       $scope.matches = JSON.parse(localStorage.getItem("matches"));
     };
@@ -256,8 +276,8 @@ button {
 
       match.completed = true;
 
-      if(student1.matches.length >= 3) students1.matches = students1.matches.splice(0, 1);
-      if(student2.matches.length >= 3) students2.matches = students2.matches.splice(0, 1);
+      while(student1.matches.length >= 3) student1.matches.shift();
+      while(student2.matches.length >= 3) student2.matches.shift();
 
       student1.matches.push(student1MatchInfo);
       student2.matches.push(student2MatchInfo);
