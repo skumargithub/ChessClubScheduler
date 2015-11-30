@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html ng-app="RankingApp">
+<head>
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 15px;
+}
+
+button {
+    margin-left: 10px;
+    margin-top: 1px;
+    width: 84px;
+    height: 45px; 
+    font-size:14px;
+    font-weight:700;
+}
+
+.green{
+  color:green;
+}
+.gray{
+  color:gray;
+}
+</style>
+<title>Chess Club, RANKING</title>
+<script type="text/javascript" src="lib/angular.min.js"></script>
+
+</head>
+<body style="width: 850px">
+<div ng-controller="RankingCtrl">
+  <h2 align="center">Student Rankings</h2>
+  <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
+
+  <table cellspacing="2" cellpadding="0" border="0" width="800">
+  <tr>
+    <td>
+       <table cellspacing="2" cellpadding="2" border="2" width="800" >
+         <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Rank</th>
+         </tr>
+       </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+       <div style="width:825px; height:500px; overflow:auto;">
+         <table cellspacing="0" cellpadding="1" border="1" width="800" >
+          <tr ng-repeat="student in students">
+            <td>{{student.firstName}}</td>
+            <td>{{student.lastName}}</td>
+            <td>{{student.rank}}</td>
+          </tr>
+         </table>  
+       </div>
+    </td>
+  </tr>
+  </table>
+ 
+<script>
+  var app = angular.module('RankingApp', []);
+  app.controller('RankingCtrl', function($scope) {
+ 
+    $scope.students = [];
+
+    $scope.fileSelected = function(fileInput) {
+      var fileName = fileInput.files[0].name;
+      var reader = new FileReader();
+      reader.onload = (function(theFile) {
+        //console.log("theFile: " + theFile);
+        //console.log("contents: " + reader.result);
+        var students = JSON.parse(reader.result);
+
+	      // Sort by rank
+	      $scope.students = students.sort(function(a, b) {
+          if(a.rank > b.rank) return 1;
+
+          return -1;
+        });
+
+        $scope.$apply();
+      });
+
+      reader.readAsText(fileInput.files[0]);
+    }
+  });
+</script>
+</body>
+</html>
+
