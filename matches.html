@@ -11,7 +11,7 @@ th, td {
 }
 
 button {  
-    margin-left: 121px;
+    margin-left: 21px;
     margin-top: 1px;
     width: 134px;
     height: 45px; 
@@ -37,6 +37,7 @@ button {
   <button type="button" ng-click="loadMatches()">Restore</button>
   <button type="button" ng-disabled="resultsToBeRecorded != 0" ng-click="exportMatches()">Export Matches</button>
   <button type="button" ng-disabled="resultsToBeRecorded != 0" ng-click="exportStudents()">Export Students</button>
+  <button type="button" ng-disabled="!studentsExported" ng-click="viewRanking()">View Ranking</button>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
@@ -64,9 +65,14 @@ button {
 	      (Rank: {{match.student2.rank}})
             </td>
             <td>
-              <input ng-disabled="match.completed" value="student1" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio"><br/>
-	      <input ng-disabled="match.completed" value="draw" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">Draw<br/>
-              <input ng-disabled="match.completed" value="student2" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">
+              <input value="student1" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio"><br/>
+	      <input value="draw" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">
+              <span ng-switch on="match.completed">
+	        <span ng-switch-when="true" style="color: green">Draw</span>
+	        <span ng-switch-default style="color: red">Draw</span>
+              </span>
+              <br/>
+              <input value="student2" ng-model="match.result" ng-click="resultClicked(match)" name="{{match.student1.firstName}}_result" type="radio">
             </td>
           </tr>
          </table>  
@@ -220,12 +226,18 @@ button {
       // And save
       var blob = new Blob([JSON.stringify(students, null, 2)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "students-" + new Date().toJSON().slice(0,10) + ".txt");
+
+      $scope.studentsExported = true;
     };
+
+    $scope.viewRanking = function() {
+      window.location = "ranking.html";
+    }
 
     $scope.resultClicked = function(match) {
       console.log("in resultClicked");
 
-      $scope.resultsToBeRecorded--;
+      if(!match.completed) $scope.resultsToBeRecorded--;
 
       function findStudent(firstName, lastName) {
         for(var i = 0; i < $scope.allStudents.length; ++i) {
