@@ -171,6 +171,9 @@ button {
 
     $scope.remove = function(index) {
       console.log("In remove with index: " + index);
+      $scope.students.splice(index, 1);
+
+      $scope.reRank();
     };
 
     $scope.up = function(index) {
