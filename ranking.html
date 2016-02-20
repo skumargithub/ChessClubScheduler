@@ -25,24 +25,46 @@ button {
 .gray{
   color:gray;
 }
+
+.sortorder:after {
+  content: '\25b2';
+}
+.sortorder.reverse:after {
+  content: '\25bc';
+}
+
 </style>
 <title>Chess Club, RANKING</title>
 <script type="text/javascript" src="lib/angular.min.js"></script>
+<script type="text/javascript" src="lib/FileSaver.min.js"></script>
 
 </head>
 <body style="width: 850px">
 <div ng-controller="RankingCtrl">
   <h2 align="center">Student Rankings</h2>
   <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
+  <button ng-click="saveFile()">Save</button>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
     <td>
        <table cellspacing="2" cellpadding="2" border="2" width="800" >
          <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Rank</th>
+            <th>
+              <button ng-click="order('firstName')">First Name</button>
+              <span class="sortorder" ng-show="predicate === 'firstName'" ng-class="{reverse:reverse}"></span>
+	    </th>
+            <th>
+              <button ng-click="order('lastName')">Last Name</button>
+              <span class="sortorder" ng-show="predicate === 'lastName'" ng-class="{reverse:reverse}"></span>
+	    </th>
+            <th>
+              <button ng-click="order('rank')">Rank</button>
+              <span class="sortorder" ng-show="predicate === 'rank'" ng-class="{reverse:reverse}"></span>
+	    </th>
+            <th>
+              Operation
+	    </th>
          </tr>
        </table>
     </td>
@@ -51,33 +73,59 @@ button {
     <td>
        <div style="width:825px; height:500px; overflow:auto;">
          <table cellspacing="0" cellpadding="1" border="1" width="800" >
-          <tr ng-repeat="student in students">
+          <tr ng-repeat="student in students | orderBy:predicate:reverse">
             <td>{{student.firstName}}</td>
             <td>{{student.lastName}}</td>
             <td>{{student.rank}}</td>
+            <td>
+             <label ng-click="remove($index)">X</label>
+             <label ng-click="up($index)">&#8679;</label>
+             <label ng-click="down($index)">&#8681;</label>
+            </td>
           </tr>
          </table>  
        </div>
     </td>
   </tr>
   </table>
- 
+
+  <fieldset>
+    <legend>Add Student</legend>
+    <label>First Name</label><input type="text" ng-model="firstName"><br />
+    <label>Last Name</label><input type="text" ng-model="lastName"><br />
+    <label>Rank</label><input type="number" ng-model="rank"><br />
+    <button ng-disabled="!validInput()" type="button" ng-click="addRow()">Add</button>
+  </fieldset>
+
 <script>
   var app = angular.module('RankingApp', []);
   app.controller('RankingCtrl', function($scope) {
  
     $scope.students = [];
+    $scope.firstName='';
+    $scope.lastName='';
+    $scope.rank='';
+
+    $scope.predicate = 'rank';
+    $scope.reverse = false;
+
+    $scope.order = function(predicate) {
+      $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+      $scope.predicate = predicate;
+    };
 
     $scope.fileSelected = function(fileInput) {
-      var fileName = fileInput.files[0].name;
+      $scope.fileName = fileInput.files[0].name;
+      console.log("Loading file: " + $scope.fileName);
+
       var reader = new FileReader();
       reader.onload = (function(theFile) {
         //console.log("theFile: " + theFile);
         //console.log("contents: " + reader.result);
         var students = JSON.parse(reader.result);
 
-	      // Sort by rank
-	      $scope.students = students.sort(function(a, b) {
+        // Sort by rank
+        $scope.students = students.sort(function(a, b) {
           if(a.rank > b.rank) return 1;
 
           return -1;
@@ -87,7 +135,57 @@ button {
       });
 
       reader.readAsText(fileInput.files[0]);
+    };
+
+    $scope.saveFile = function() {
+      var blob = new Blob([JSON.stringify($scope.students, null, 2)], {type: "text/plain;charset=utf-8"});
+      if($scope.fileName == null) $scope.fileName = "students.txt";
+      saveAs(blob, $scope.fileName);
+    };
+
+    $scope.reRank = function() {
+      var students = $scope.students.sort(function(a, b) { return a.rank - b.rank; });
+      for(var i = 0; i < students.length; ++i) {
+        students[i].rank = i + 1;
+      }
+
+      $scope.students = students;
+    };
+
+    $scope.validInput = function() {
+      return $scope.firstName != '' && $scope.lastName != '' && $scope.rank != '';
     }
+
+    $scope.addRow = function() {
+      $scope.students.push({
+        'firstName' : $scope.firstName,
+        'lastName' : $scope.lastName,
+        'rank': $scope.rank,
+      });
+      $scope.reRank();
+
+      $scope.firstName='';
+      $scope.lastName='';
+      $scope.rank='';
+    };
+
+    $scope.remove = function(index) {
+      console.log("In remove with index: " + index);
+    };
+
+    $scope.up = function(index) {
+      console.log("In up with index: " + index);
+      $scope.students[index].rank = $scope.students[index].rank - 1.5
+
+      $scope.reRank();
+    };
+
+    $scope.down = function(index) {
+      console.log("In down with index: " + index);
+      $scope.students[index].rank = $scope.students[index].rank + 1.5
+
+      $scope.reRank();
+    };
   });
 </script>
 </body>
