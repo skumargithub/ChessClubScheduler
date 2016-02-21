@@ -73,7 +73,7 @@ button {
     <td>
        <div style="width:825px; height:500px; overflow:auto;">
          <table cellspacing="0" cellpadding="1" border="1" width="800" >
-          <tr ng-repeat="student in students | orderBy:predicate:reverse">
+          <tr ng-repeat="student in students track by (student.firstName + student.lastName)| orderBy:predicate:reverse">
             <td>{{student.firstName}}</td>
             <td>{{student.lastName}}</td>
             <td>{{student.rank}}</td>
@@ -104,7 +104,7 @@ button {
     $scope.students = [];
     $scope.firstName='';
     $scope.lastName='';
-    $scope.rank='';
+    $scope.rank=1;
 
     $scope.predicate = 'rank';
     $scope.reverse = false;
@@ -131,6 +131,8 @@ button {
           return -1;
         });
 
+        $scope.rank = $scope.maxRank() + 1;
+
         $scope.$apply();
       });
 
@@ -152,21 +154,43 @@ button {
       $scope.students = students;
     };
 
+    $scope.maxRank = function() {
+      var max = 0;
+      if($scope.students) {
+        if($scope.students.length == 1)
+          max = $scope.students[0].rank;
+        else
+          max = $scope.students.reduce(function(a, b){ return a.rank > b.rank ? a.rank : b.rank; });
+      }
+
+      return max;
+    };
+
     $scope.validInput = function() {
       return $scope.firstName != '' && $scope.lastName != '' && $scope.rank != '';
     }
 
     $scope.addRow = function() {
+      // Ensure this "new" student does not already exist
+      for(var i = 0; i < $scope.students.length; ++i) {
+        var student = $scope.students[i];
+	if(student.firstName === $scope.firstName && student.lastName === $scope.lastName) {
+          alert("Student " + $scope.firstName + " " + $scope.lastName + " already exits!");
+	  return;
+        }
+      }
+
       $scope.students.push({
         'firstName' : $scope.firstName,
         'lastName' : $scope.lastName,
         'rank': $scope.rank,
-      });
+        'matches' : []
+        });
       $scope.reRank();
 
       $scope.firstName='';
       $scope.lastName='';
-      $scope.rank='';
+      $scope.rank= $scope.maxRank() + 1;
     };
 
     $scope.remove = function(index) {
