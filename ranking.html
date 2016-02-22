@@ -42,8 +42,13 @@ button {
 <body style="width: 850px">
 <div ng-controller="RankingCtrl">
   <h2 align="center">Student Rankings</h2>
+  <fieldset>
   <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
   <button ng-click="saveFile()">Save</button>
+  <button style="flat: right" ng-disabled="modified" ng-click="startSignin()">Start Signin</button>
+  </fieldset>
+
+  <br/>
 
   <table cellspacing="2" cellpadding="0" border="0" width="800">
   <tr>
@@ -73,7 +78,7 @@ button {
     <td>
        <div style="width:825px; height:500px; overflow:auto;">
          <table cellspacing="0" cellpadding="1" border="1" width="800" >
-          <tr ng-repeat="student in students track by (student.firstName + student.lastName)| orderBy:predicate:reverse">
+          <tr ng-repeat="student in students | orderBy:predicate:reverse track by (student.firstName + student.lastName)">
             <td>{{student.firstName}}</td>
             <td>{{student.lastName}}</td>
             <td>{{student.rank}}</td>
@@ -100,6 +105,8 @@ button {
 <script>
   var app = angular.module('RankingApp', []);
   app.controller('RankingCtrl', function($scope) {
+
+    $scope.modified = false;
  
     $scope.students = [];
     $scope.firstName='';
@@ -143,6 +150,8 @@ button {
       var blob = new Blob([JSON.stringify($scope.students, null, 2)], {type: "text/plain;charset=utf-8"});
       if($scope.fileName == null) $scope.fileName = "students.txt";
       saveAs(blob, $scope.fileName);
+
+      $scope.modified = false;
     };
 
     $scope.reRank = function() {
@@ -191,6 +200,8 @@ button {
       $scope.firstName='';
       $scope.lastName='';
       $scope.rank= $scope.maxRank() + 1;
+
+      $scope.modified = true;
     };
 
     $scope.remove = function(index) {
@@ -198,6 +209,8 @@ button {
       $scope.students.splice(index, 1);
 
       $scope.reRank();
+
+      $scope.modified = true;
     };
 
     $scope.up = function(index) {
@@ -205,6 +218,8 @@ button {
       $scope.students[index].rank = $scope.students[index].rank - 1.5
 
       $scope.reRank();
+
+      $scope.modified = true;
     };
 
     $scope.down = function(index) {
@@ -212,6 +227,12 @@ button {
       $scope.students[index].rank = $scope.students[index].rank + 1.5
 
       $scope.reRank();
+
+      $scope.modified = true;
+    };
+
+    $scope.startSignin = function() {
+      window.location = "signin.html";
     };
   });
 </script>
