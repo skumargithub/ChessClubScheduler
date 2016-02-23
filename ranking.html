@@ -68,6 +68,10 @@ button {
               <span class="sortorder" ng-show="predicate === 'rank'" ng-class="{reverse:reverse}"></span>
 	    </th>
             <th>
+              <button ng-click="order('grade')">Grade</button>
+              <span class="sortorder" ng-show="predicate === 'grade'" ng-class="{reverse:reverse}"></span>
+	    </th>
+            <th>
               Operation
 	    </th>
          </tr>
@@ -82,6 +86,7 @@ button {
             <td>{{student.firstName}}</td>
             <td>{{student.lastName}}</td>
             <td>{{student.rank}}</td>
+            <td>{{student.grade}}</td>
             <td>
              <label ng-click="remove($index)">X</label>
              <label ng-click="up($index)">&#8679;</label>
@@ -99,6 +104,7 @@ button {
     <label>First Name</label><input type="text" ng-model="firstName"><br />
     <label>Last Name</label><input type="text" ng-model="lastName"><br />
     <label>Rank</label><input type="number" ng-model="rank"><br />
+    <label>Grade</label><input type="number" ng-model="grade"><br />
     <button ng-disabled="!validInput()" type="button" ng-click="addRow()">Add</button>
   </fieldset>
 
@@ -112,6 +118,7 @@ button {
     $scope.firstName='';
     $scope.lastName='';
     $scope.rank=1;
+    $scope.grade='';
 
     $scope.predicate = 'rank';
     $scope.reverse = false;
@@ -176,7 +183,7 @@ button {
     };
 
     $scope.validInput = function() {
-      return $scope.firstName != '' && $scope.lastName != '' && $scope.rank != '';
+      return $scope.firstName != '' && $scope.lastName != '' && $scope.rank != '' && $scope.grade != '';
     }
 
     $scope.addRow = function() {
@@ -193,6 +200,7 @@ button {
         'firstName' : $scope.firstName,
         'lastName' : $scope.lastName,
         'rank': $scope.rank,
+        'grade': $scope.grade,
         'matches' : []
         });
       $scope.reRank();
@@ -200,6 +208,7 @@ button {
       $scope.firstName='';
       $scope.lastName='';
       $scope.rank= $scope.maxRank() + 1;
+      $scope.grade = '';
 
       $scope.modified = true;
     };
