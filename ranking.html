@@ -36,6 +36,7 @@ button {
 </style>
 <title>Chess Club, RANKING</title>
 <script type="text/javascript" src="lib/angular.min.js"></script>
+<script type="text/javascript" src="lib/jspdf.min.js"></script>
 <script type="text/javascript" src="lib/FileSaver.min.js"></script>
 
 </head>
@@ -45,6 +46,7 @@ button {
   <fieldset>
   <input type="file" onchange="angular.element(this).scope().fileSelected(this)">
   <button ng-click="saveFile()">Save</button>
+  <button ng-click="exportPdf()">Export PDF</button>
   <button style="flat: right" ng-disabled="modified" ng-click="startSignin()">Start Signin</button>
   </fieldset>
 
@@ -242,6 +244,33 @@ button {
 
     $scope.startSignin = function() {
       window.location = "signin.html";
+    };
+
+    $scope.exportPdf = function() {
+      var pdf = new jsPDF('p', 'pt', 'letter');
+      var y = 60;
+      pdf.text(30, y, "                                              CHESS CLUB RANKING");
+      y += 40;
+
+      for(var i = 0; i < $scope.students.length; ++i, y += 20) {
+        var student = $scope.students[i];
+        var name = student.firstName + " " + student.lastName
+        name = name + "                                                         ";
+        name = name.slice(0, 50);
+        console.log("Processing " + i + "str: \"" + name + "\"");
+        pdf.text(20, y, name + student.rank);
+        pdf.rect(20, y - 15, 400, 20);
+
+        if(i != 0 && i % 32 == 0) {
+          console.log("Adding page @ " + i);
+          pdf.addPage();
+          y = 40;
+          pdf.text(30, y, "                                              CHESS CLUB RANKING");
+          y += 40;
+        }
+      }
+
+      pdf.save("Results-" + new Date().toJSON().slice(0,10) + ".pdf");
     };
   });
 </script>
