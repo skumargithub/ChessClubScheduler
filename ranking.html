@@ -249,7 +249,7 @@ button {
     $scope.exportPdf = function() {
       var pdf = new jsPDF('p', 'pt', 'letter');
       var y = 60;
-      pdf.text(30, y, "                                              CHESS CLUB RANKING");
+      pdf.text(200, y, "CHESS CLUB RANKING");
       y += 40;
 
       for(var i = 0; i < $scope.students.length; ++i, y += 20) {
@@ -258,14 +258,14 @@ button {
         name = name + "                                                         ";
         name = name.slice(0, 50);
         console.log("Processing " + i + "str: \"" + name + "\"");
-        pdf.text(20, y, name + student.rank);
-        pdf.rect(20, y - 15, 400, 20);
+        pdf.text(60, y, name + student.rank);
+        pdf.rect(60, y - 15, 400, 20);
 
-        if(i != 0 && i % 32 == 0) {
+        if(i != 0 && i % 30 == 0) {
           console.log("Adding page @ " + i);
           pdf.addPage();
-          y = 40;
-          pdf.text(30, y, "                                              CHESS CLUB RANKING");
+          y = 60;
+          pdf.text(200, y, "CHESS CLUB RANKING");
           y += 40;
         }
       }
