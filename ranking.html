@@ -252,14 +252,22 @@ button {
       pdf.text(200, y, "CHESS CLUB RANKING");
       y += 40;
 
-      for(var i = 0; i < $scope.students.length; ++i, y += 20) {
+      for(var i = 0, textColor = 0; i < $scope.students.length; ++i, y += 20) {
         var student = $scope.students[i];
-        var name = student.firstName + " " + student.lastName
-        name = name + "                                                         ";
-        name = name.slice(0, 50);
-        console.log("Processing " + i + "str: \"" + name + "\"");
-        pdf.text(60, y, name + student.rank);
-        pdf.rect(60, y - 15, 400, 20);
+
+	pdf.setTextColor(textColor, textColor, textColor);
+	pdf.setDrawColor(0, 0, 0);
+
+        pdf.text(60, y, '  ' + student.firstName + ' ' + student.lastName);
+        pdf.rect(60, y - 15, 240, 20);
+
+        pdf.text(300, y, '   ' + student.rank.toString());
+        pdf.rect(300, y - 15, 60, 20);
+
+        pdf.text(360, y, student.grade ? '    ' + student.grade.toString() : '');
+        pdf.rect(360, y - 15, 50, 20);
+
+	textColor = textColor == 0 ? 128 : 0;
 
         if(i != 0 && i % 30 == 0) {
           console.log("Adding page @ " + i);
@@ -270,7 +278,7 @@ button {
         }
       }
 
-      pdf.save("Results-" + new Date().toJSON().slice(0,10) + ".pdf");
+      pdf.save("Ranking-" + new Date().toJSON().slice(0,10) + ".pdf");
     };
   });
 </script>
